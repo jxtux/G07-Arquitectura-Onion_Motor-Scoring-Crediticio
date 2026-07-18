@@ -1,0 +1,209 @@
+openapi: 3.0.3
+info:
+  title: Motor de Scoring Crediticio API
+  version: 2.0.0
+  description: API REST para RF04, RF05 y RF06 con Arquitectura Onion.
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/solicitudes-credito:
+    post:
+      summary: RF04 - Registrar solicitud de crédito
+      operationId: registrarSolicitudCredito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearSolicitudCreditoRequest'
+      responses:
+        '201':
+          description: Solicitud registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolicitudCreditoResponse'
+        '400':
+          description: Formato inválido
+        '409':
+          description: Identificador externo duplicado
+        '422':
+          description: Regla de dominio incumplida
+  /api/solicitudes-credito/{id}/evaluar:
+    post:
+      summary: RF05/RF06 - Validar información y calcular scoring
+      operationId: evaluarSolicitudCredito
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Evaluación calculada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluacionScoringResponse'
+        '404':
+          description: Solicitud no encontrada
+        '409':
+          description: Evaluación duplicada
+        '422':
+          description: Información o política inválida
+components:
+  schemas:
+    SolicitanteRequest:
+      type: object
+      required:
+        - tipoDocumento
+        - numeroDocumento
+        - nombresRazonSocial
+        - ingresosMensuales
+        - gastosMensuales
+        - obligacionesFinancieras
+      properties:
+        tipoDocumento:
+          type: string
+          enum: [DNI, RUC, CE, PASAPORTE]
+        numeroDocumento:
+          type: string
+          example: '12345678'
+        nombresRazonSocial:
+          type: string
+          example: Persona de prueba
+        ingresosMensuales:
+          type: number
+          format: double
+          example: 5500
+        gastosMensuales:
+          type: number
+          format: double
+          example: 1800
+        obligacionesFinancieras:
+          type: number
+          format: double
+          example: 700
+        antiguedadLaboralNegocio:
+          type: integer
+          example: 36
+        numeroObligacionesActivas:
+          type: integer
+          example: 2
+        puntajeHistorialPagos:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 85
+        alertasMora:
+          type: integer
+          minimum: 0
+          example: 0
+    CrearSolicitudCreditoRequest:
+      type: object
+      required:
+        - identificadorExterno
+        - solicitante
+        - codigoProducto
+        - montoSolicitado
+        - plazoSolicitado
+        - moneda
+        - finalidadCredito
+        - canalOrigen
+      properties:
+        identificadorExterno:
+          type: string
+          example: WEB-2026-000001
+        solicitante:
+          $ref: '#/components/schemas/SolicitanteRequest'
+        codigoProducto:
+          type: string
+          example: PRESTAMO_PERSONAL
+        montoSolicitado:
+          type: number
+          example: 15000
+        plazoSolicitado:
+          type: integer
+          example: 24
+        moneda:
+          type: string
+          enum: [PEN, USD]
+        finalidadCredito:
+          type: string
+          example: Consumo
+        canalOrigen:
+          type: string
+          example: WEB
+    SolicitudCreditoResponse:
+      type: object
+      properties:
+        idSolicitud:
+          type: integer
+          format: int64
+        idSolicitante:
+          type: integer
+          format: int64
+        identificadorExterno:
+          type: string
+        codigoProducto:
+          type: string
+        montoSolicitado:
+          type: number
+        plazoSolicitado:
+          type: integer
+        moneda:
+          type: string
+        estado:
+          type: string
+          example: REGISTRADA
+        fechaRegistro:
+          type: string
+          format: date-time
+    ResultadoFactorResponse:
+      type: object
+      properties:
+        factor:
+          type: string
+        valorEvaluado:
+          type: number
+        pesoAplicado:
+          type: number
+        puntajeBase:
+          type: integer
+        puntajeObtenido:
+          type: integer
+        reglaAplicada:
+          type: string
+        observacion:
+          type: string
+        excluyente:
+          type: boolean
+    EvaluacionScoringResponse:
+      type: object
+      properties:
+        idEvaluacion:
+          type: integer
+          format: int64
+        idSolicitud:
+          type: integer
+          format: int64
+        puntajeTotal:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        resultado:
+          type: string
+          enum: [PREAPROBADA, REVISION_MANUAL, RECHAZADA]
+        estado:
+          type: string
+        versionModelo:
+          type: string
+        fechaEvaluacion:
+          type: string
+          format: date-time
+        factores:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultadoFactorResponse'

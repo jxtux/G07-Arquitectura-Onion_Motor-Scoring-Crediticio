@@ -1,0 +1,272 @@
+{
+  "info": {
+    "_postman_id": "23019605-f532-48a0-9417-a162edb1939b",
+    "name": "Motor Scoring Crediticio Onion v2",
+    "description": "RF04 registrar; RF05 validar; RF06 calcular scoring.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "idSolicitud",
+      "value": ""
+    },
+    {
+      "key": "identificadorExterno",
+      "value": ""
+    },
+    {
+      "key": "invalidIdSolicitud",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/actuator/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "actuator",
+            "health"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Servicio UP', () => pm.expect(pm.response.json().status).to.eql('UP'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - RF04 Registrar solicitud",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('identificadorExterno', `POSTMAN-${Date.now()}`);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.test('Estado REGISTRADA', () => pm.expect(json.estado).to.eql('REGISTRADA'));",
+              "pm.collectionVariables.set('idSolicitud', json.idSolicitud);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identificadorExterno\": \"{{identificadorExterno}}\",\n  \"solicitante\": {\n    \"tipoDocumento\": \"DNI\",\n    \"numeroDocumento\": \"12345678\",\n    \"nombresRazonSocial\": \"Persona de prueba\",\n    \"ingresosMensuales\": 5500,\n    \"gastosMensuales\": 1800,\n    \"obligacionesFinancieras\": 700,\n    \"antiguedadLaboralNegocio\": 36,\n    \"numeroObligacionesActivas\": 2,\n    \"puntajeHistorialPagos\": 85,\n    \"alertasMora\": 0\n  },\n  \"codigoProducto\": \"PRESTAMO_PERSONAL\",\n  \"montoSolicitado\": 15000,\n  \"plazoSolicitado\": 24,\n  \"moneda\": \"PEN\",\n  \"finalidadCredito\": \"Consumo\",\n  \"canalOrigen\": \"POSTMAN\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/solicitudes-credito",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "solicitudes-credito"
+          ]
+        }
+      }
+    },
+    {
+      "name": "02 - RF05 y RF06 Validar y calcular",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/solicitudes-credito/{{idSolicitud}}/evaluar",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "solicitudes-credito",
+            "{{idSolicitud}}",
+            "evaluar"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Score 0..1000', () => pm.expect(json.puntajeTotal).to.be.within(0, 1000));",
+              "pm.test('Versión 1.0.0', () => pm.expect(json.versionModelo).to.eql('1.0.0'));",
+              "pm.test('Ocho factores', () => pm.expect(json.factores).to.have.lengthOf(8));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Error: identificador duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identificadorExterno\": \"{{identificadorExterno}}\",\n  \"solicitante\": {\n    \"tipoDocumento\": \"DNI\",\n    \"numeroDocumento\": \"12345678\",\n    \"nombresRazonSocial\": \"Persona de prueba\",\n    \"ingresosMensuales\": 5500,\n    \"gastosMensuales\": 1800,\n    \"obligacionesFinancieras\": 700,\n    \"antiguedadLaboralNegocio\": 36,\n    \"numeroObligacionesActivas\": 2,\n    \"puntajeHistorialPagos\": 85,\n    \"alertasMora\": 0\n  },\n  \"codigoProducto\": \"PRESTAMO_PERSONAL\",\n  \"montoSolicitado\": 15000,\n  \"plazoSolicitado\": 24,\n  \"moneda\": \"PEN\",\n  \"finalidadCredito\": \"Consumo\",\n  \"canalOrigen\": \"POSTMAN\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/solicitudes-credito",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "solicitudes-credito"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+              "pm.test('Código DUPLICATE_APPLICATION', () => pm.expect(pm.response.json().code).to.eql('DUPLICATE_APPLICATION'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Registrar solicitud con monto fuera de política",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('identificadorExterno', `POSTMAN-INVALID-${Date.now()}`);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('invalidIdSolicitud', pm.response.json().idSolicitud);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identificadorExterno\": \"{{identificadorExterno}}\",\n  \"solicitante\": {\n    \"tipoDocumento\": \"DNI\",\n    \"numeroDocumento\": \"87654321\",\n    \"nombresRazonSocial\": \"Solicitud inválida\",\n    \"ingresosMensuales\": 5500,\n    \"gastosMensuales\": 1800,\n    \"obligacionesFinancieras\": 700,\n    \"antiguedadLaboralNegocio\": 36,\n    \"numeroObligacionesActivas\": 2,\n    \"puntajeHistorialPagos\": 85,\n    \"alertasMora\": 0\n  },\n  \"codigoProducto\": \"PRESTAMO_PERSONAL\",\n  \"montoSolicitado\": 90000,\n  \"plazoSolicitado\": 24,\n  \"moneda\": \"PEN\",\n  \"finalidadCredito\": \"Consumo\",\n  \"canalOrigen\": \"POSTMAN\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/solicitudes-credito",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "solicitudes-credito"
+          ]
+        }
+      },
+      "description": "RF04 registra la solicitud; RF05 detectará que el monto excede el límite del producto."
+    },
+    {
+      "name": "05 - RF05 rechaza monto fuera de política",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/solicitudes-credito/{{invalidIdSolicitud}}/evaluar",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "solicitudes-credito",
+            "{{invalidIdSolicitud}}",
+            "evaluar"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+              "pm.test('Error de negocio', () => pm.expect(pm.response.json().code).to.eql('BUSINESS_VALIDATION_ERROR'));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

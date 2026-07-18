@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+ <modelVersion>4.0.0</modelVersion><parent><groupId>com.finanscore</groupId><artifactId>motor-scoring-crediticio-parent</artifactId><version>2.0.2</version></parent><artifactId>motor-scoring-bootstrap</artifactId>
+ <dependencies>
+  <dependency><groupId>com.finanscore</groupId><artifactId>motor-scoring-infrastructure</artifactId><version>${project.version}</version></dependency>
+  <dependency><groupId>com.finanscore</groupId><artifactId>motor-scoring-presentation</artifactId><version>${project.version}</version></dependency>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency>
+  <dependency><groupId>org.flywaydb</groupId><artifactId>flyway-core</artifactId></dependency>
+  <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><scope>runtime</scope></dependency>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+  <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><version>${archunit.version}</version><scope>test</scope></dependency>
+ </dependencies>
+ <build><finalName>motor-scoring-app</finalName><plugins>
+  <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId><version>${spring-boot.version}</version><configuration><mainClass>com.finanscore.motorscoring.bootstrap.MotorScoringApplication</mainClass></configuration><executions><execution><goals><goal>repackage</goal></goals></execution></executions></plugin>
+  <plugin>
+   <groupId>org.apache.maven.plugins</groupId>
+   <artifactId>maven-failsafe-plugin</artifactId>
+   <configuration>
+    <!--
+      El proyecto importa el BOM de Spring Boot, pero no hereda de
+      spring-boot-starter-parent. Después de spring-boot:repackage, Failsafe
+      no debe usar el JAR ejecutable como directorio de clases, sino las
+      clases compiladas sin reempaquetar.
+    -->
+    <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+    <useModulePath>false</useModulePath>
+   </configuration>
+   <executions>
+    <execution>
+     <goals>
+      <goal>integration-test</goal>
+      <goal>verify</goal>
+     </goals>
+    </execution>
+   </executions>
+  </plugin>
+ </plugins></build>
+</project>
