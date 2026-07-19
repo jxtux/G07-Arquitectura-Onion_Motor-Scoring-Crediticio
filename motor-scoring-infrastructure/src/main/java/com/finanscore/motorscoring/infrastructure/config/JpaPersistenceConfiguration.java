@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Registra explícitamente los adaptadores de persistencia del módulo de
- * infraestructura. La clase principal se encuentra en el paquete bootstrap,
- * por lo que el auto-configuration package de Spring Boot no incluye por
- * defecto los paquetes hermanos de infraestructura.
+ * infraestructura. La clase principal se encuentra en el paquete bootstrap, por
+ * lo que el auto-configuration package de Spring Boot no incluye por defecto
+ * los paquetes hermanos de infraestructura.
  */
 @Configuration(proxyBeanMethods = false)
 @EntityScan(basePackageClasses = EvaluacionCrediticiaJpaEntity.class)
