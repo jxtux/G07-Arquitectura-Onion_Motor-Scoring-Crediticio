@@ -30,6 +30,11 @@ public class OnionBeanConfiguration {
 	}
 
 	@Bean
+	CalculadorRelacionCuotaIngreso relacionCuotaIngreso() {
+		return new CalculadorRelacionCuotaIngreso();
+	}
+
+	@Bean
 	EvaluadorReglasExcluyentes excluyentes() {
 		return new EvaluadorReglasExcluyentes();
 	}

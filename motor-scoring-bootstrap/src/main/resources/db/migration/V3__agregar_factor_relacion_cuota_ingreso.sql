@@ -2,253 +2,245 @@
 -- V3__agregar_factor_relacion_cuota_ingreso.sql
 --
 -- Crea la versión 1.1.0 del modelo de scoring.
--- Incorpora únicamente el factor RELACION_CUOTA_INGRESO.
+-- Copia los factores y reglas de la versión 1.0.0.
+-- Agrega el factor RELACION_CUOTA_INGRESO.
 -- ============================================================
 
 -- ------------------------------------------------------------
--- 1. Desactivar la versión actualmente activa
+-- 1. Finalizar la versión actualmente activa
 -- ------------------------------------------------------------
 
 UPDATE versiones_modelo
-SET activo = FALSE
-WHERE activo = TRUE;
+SET estado = 'INACTIVA',
+    fecha_fin_vigencia = DATE '2026-07-19'
+WHERE id_modelo = 1
+  AND estado = 'ACTIVA';
 
 
 -- ------------------------------------------------------------
--- 2. Crear la versión 1.1.0
+-- 2. Crear la nueva versión del modelo
 -- ------------------------------------------------------------
 
 INSERT INTO versiones_modelo (
-    codigo_version,
-    descripcion,
-    activo,
-    fecha_creacion
+    id_version_modelo,
+    id_modelo,
+    numero_version,
+    fecha_inicio_vigencia,
+    fecha_fin_vigencia,
+    estado
 )
 VALUES (
+    2,
+    1,
     '1.1.0',
-    'Modelo de scoring con relación cuota ingreso',
-    TRUE,
-    CURRENT_TIMESTAMP
+    DATE '2026-07-20',
+    NULL,
+    'ACTIVA'
 );
 
 
 -- ------------------------------------------------------------
--- 3. Copiar los factores de la versión 1.0.0
+-- 3. Copiar los factores existentes a la versión 1.1.0
+--
+-- Los pesos anteriores se reducen proporcionalmente al 90%
+-- para reservar un peso de 10% al nuevo factor.
+--
+-- Total:
+-- 22.50 + 18 + 18 + 13.50 + 9 + 4.50 + 4.50 + 0 + 10
+-- = 100
 -- ------------------------------------------------------------
 
 INSERT INTO factores_scoring (
-    version_modelo_id,
+    id_factor,
+    id_version_modelo,
     codigo,
     nombre,
     descripcion,
     peso,
-    orden,
-    activo
+    estado
 )
-SELECT
-    nueva_version.id,
-    factor.codigo,
-    factor.nombre,
-    factor.descripcion,
-
-    CASE factor.codigo
-
-        WHEN 'HISTORIAL_PAGOS'
-            THEN 22.0000
-
-        WHEN 'RELACION_DEUDA_INGRESO'
-            THEN 18.0000
-
-        WHEN 'CAPACIDAD_PAGO'
-            THEN 18.0000
-
-        WHEN 'ESTABILIDAD_INGRESOS'
-            THEN 14.0000
-
-        WHEN 'ANTIGUEDAD_LABORAL'
-            THEN 10.0000
-
-        WHEN 'OBLIGACIONES_ACTIVAS'
-            THEN 4.0000
-
-        WHEN 'MONTO_CAPACIDAD'
-            THEN 4.0000
-
-        WHEN 'ALERTAS_MORA'
-            THEN 0.0000
-
-        ELSE factor.peso
-
-    END AS peso,
-
-    factor.orden,
-    factor.activo
-
-FROM factores_scoring factor
-
-INNER JOIN versiones_modelo version_anterior
-    ON version_anterior.id = factor.version_modelo_id
-
-CROSS JOIN versiones_modelo nueva_version
-
-WHERE version_anterior.codigo_version = '1.0.0'
-  AND nueva_version.codigo_version = '1.1.0';
+VALUES
+(
+    9,
+    2,
+    'HISTORIAL_PAGOS',
+    'Historial de pagos',
+    'Comportamiento histórico',
+    22.50,
+    'ACTIVO'
+),
+(
+    10,
+    2,
+    'RELACION_DEUDA_INGRESO',
+    'Relación deuda-ingreso',
+    'Obligaciones respecto del ingreso',
+    18.00,
+    'ACTIVO'
+),
+(
+    11,
+    2,
+    'CAPACIDAD_PAGO',
+    'Capacidad de pago',
+    'Ingreso disponible',
+    18.00,
+    'ACTIVO'
+),
+(
+    12,
+    2,
+    'ESTABILIDAD_INGRESOS',
+    'Estabilidad de ingresos',
+    'Continuidad de ingresos',
+    13.50,
+    'ACTIVO'
+),
+(
+    13,
+    2,
+    'ANTIGUEDAD_LABORAL',
+    'Antigüedad laboral',
+    'Meses de permanencia',
+    9.00,
+    'ACTIVO'
+),
+(
+    14,
+    2,
+    'OBLIGACIONES_ACTIVAS',
+    'Obligaciones activas',
+    'Cantidad de obligaciones',
+    4.50,
+    'ACTIVO'
+),
+(
+    15,
+    2,
+    'MONTO_CAPACIDAD',
+    'Monto frente a capacidad',
+    'Monto solicitado respecto a capacidad',
+    4.50,
+    'ACTIVO'
+),
+(
+    16,
+    2,
+    'ALERTAS_MORA',
+    'Alertas de mora',
+    'Regla excluyente',
+    0.00,
+    'ACTIVO'
+),
+(
+    17,
+    2,
+    'RELACION_CUOTA_INGRESO',
+    'Relación cuota-ingreso',
+    'Porcentaje de la cuota mensual respecto de los ingresos mensuales',
+    10.00,
+    'ACTIVO'
+);
 
 
 -- ------------------------------------------------------------
--- 4. Copiar las reglas de los factores existentes
+-- 4. Copiar las reglas de los ocho factores anteriores
+--
+-- Se relacionan los factores de ambas versiones mediante
+-- su código para asignar las reglas al nuevo id_factor.
 -- ------------------------------------------------------------
 
 INSERT INTO reglas_evaluacion (
-    factor_scoring_id,
+    id_factor,
     codigo,
     descripcion,
     valor_minimo,
     valor_maximo,
     puntaje,
-    excluyente,
-    motivo_exclusion,
-    orden,
-    activo
+    es_excluyente,
+    resultado_excluyente,
+    estado
 )
 SELECT
-    factor_nuevo.id,
+    factor_nuevo.id_factor,
     regla.codigo,
     regla.descripcion,
     regla.valor_minimo,
     regla.valor_maximo,
     regla.puntaje,
-    regla.excluyente,
-    regla.motivo_exclusion,
-    regla.orden,
-    regla.activo
-
+    regla.es_excluyente,
+    regla.resultado_excluyente,
+    regla.estado
 FROM reglas_evaluacion regla
-
 INNER JOIN factores_scoring factor_anterior
-    ON factor_anterior.id = regla.factor_scoring_id
-
-INNER JOIN versiones_modelo version_anterior
-    ON version_anterior.id = factor_anterior.version_modelo_id
-
+    ON factor_anterior.id_factor = regla.id_factor
 INNER JOIN factores_scoring factor_nuevo
-    ON factor_nuevo.codigo = factor_anterior.codigo
-
-INNER JOIN versiones_modelo version_nueva
-    ON version_nueva.id = factor_nuevo.version_modelo_id
-
-WHERE version_anterior.codigo_version = '1.0.0'
-  AND version_nueva.codigo_version = '1.1.0';
+    ON factor_nuevo.id_version_modelo = 2
+   AND factor_nuevo.codigo = factor_anterior.codigo
+WHERE factor_anterior.id_version_modelo = 1;
 
 
 -- ------------------------------------------------------------
--- 5. Agregar RELACION_CUOTA_INGRESO
--- ------------------------------------------------------------
-
-INSERT INTO factores_scoring (
-    version_modelo_id,
-    codigo,
-    nombre,
-    descripcion,
-    peso,
-    orden,
-    activo
-)
-SELECT
-    id,
-    'RELACION_CUOTA_INGRESO',
-    'Relación cuota ingreso',
-    'Porcentaje que representa la cuota mensual del crédito respecto de los ingresos mensuales del solicitante',
-    10.0000,
-    9,
-    TRUE
-FROM versiones_modelo
-WHERE codigo_version = '1.1.0';
-
-
--- ------------------------------------------------------------
--- 6. Agregar reglas de RELACION_CUOTA_INGRESO
+-- 5. Insertar las reglas del factor RELACION_CUOTA_INGRESO
 --
 -- Fórmula:
--- cuota = monto solicitado / plazo
--- porcentaje = cuota / ingresos mensuales * 100
+-- cuota mensual = monto solicitado / plazo solicitado
+-- porcentaje = cuota mensual / ingresos mensuales * 100
 -- ------------------------------------------------------------
 
 INSERT INTO reglas_evaluacion (
-    factor_scoring_id,
+    id_factor,
     codigo,
     descripcion,
     valor_minimo,
     valor_maximo,
     puntaje,
-    excluyente,
-    motivo_exclusion,
-    orden,
-    activo
+    es_excluyente,
+    resultado_excluyente,
+    estado
 )
-SELECT
-    factor.id,
-    regla.codigo,
-    regla.descripcion,
-    regla.valor_minimo,
-    regla.valor_maximo,
-    regla.puntaje,
-    regla.excluyente,
-    regla.motivo_exclusion,
-    regla.orden,
-    TRUE
-FROM factores_scoring factor
-
-INNER JOIN versiones_modelo version_modelo
-    ON version_modelo.id = factor.version_modelo_id
-
-CROSS JOIN (
-    SELECT
-        'RCI_BAJA' AS codigo,
-        'La cuota representa como máximo el 20% de los ingresos' AS descripcion,
-        0.0000 AS valor_minimo,
-        20.0000 AS valor_maximo,
-        100 AS puntaje,
-        FALSE AS excluyente,
-        CAST(NULL AS VARCHAR(255)) AS motivo_exclusion,
-        1 AS orden
-
-    UNION ALL
-
-    SELECT
-        'RCI_MODERADA',
-        'La cuota representa más del 20% y hasta el 30% de los ingresos',
-        20.0001,
-        30.0000,
-        75,
-        FALSE,
-        CAST(NULL AS VARCHAR(255)),
-        2
-
-    UNION ALL
-
-    SELECT
-        'RCI_ALTA',
-        'La cuota representa más del 30% y hasta el 40% de los ingresos',
-        30.0001,
-        40.0000,
-        40,
-        FALSE,
-        CAST(NULL AS VARCHAR(255)),
-        3
-
-    UNION ALL
-
-    SELECT
-        'RCI_MUY_ALTA',
-        'La cuota representa más del 40% de los ingresos',
-        40.0001,
-        CAST(NULL AS DECIMAL(19,4)),
-        0,
-        FALSE,
-        CAST(NULL AS VARCHAR(255)),
-        4
-) regla
-
-WHERE version_modelo.codigo_version = '1.1.0'
-  AND factor.codigo = 'RELACION_CUOTA_INGRESO';
+VALUES
+(
+    17,
+    'RCI_BAJA',
+    'Cuota menor o igual al 20% de los ingresos',
+    0.0000,
+    20.0000,
+    100,
+    FALSE,
+    NULL,
+    'ACTIVA'
+),
+(
+    17,
+    'RCI_MODERADA',
+    'Cuota mayor al 20% y menor o igual al 30% de los ingresos',
+    20.0001,
+    30.0000,
+    75,
+    FALSE,
+    NULL,
+    'ACTIVA'
+),
+(
+    17,
+    'RCI_ALTA',
+    'Cuota mayor al 30% y menor o igual al 40% de los ingresos',
+    30.0001,
+    40.0000,
+    40,
+    FALSE,
+    NULL,
+    'ACTIVA'
+),
+(
+    17,
+    'RCI_MUY_ALTA',
+    'Cuota mayor al 40% de los ingresos',
+    40.0001,
+    9999.0000,
+    0,
+    FALSE,
+    NULL,
+    'ACTIVA'
+);

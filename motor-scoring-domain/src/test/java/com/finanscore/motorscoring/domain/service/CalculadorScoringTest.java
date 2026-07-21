@@ -16,6 +16,7 @@ class CalculadorScoringTest {
 	@BeforeEach
 	void setUp() {
 		calculador = new CalculadorScoring(new CalculadorCapacidadPago(), new CalculadorRelacionDeudaIngreso(),
+		 		new CalculadorRelacionCuotaIngreso(),
 				new EvaluadorReglasExcluyentes());
 	}
 
