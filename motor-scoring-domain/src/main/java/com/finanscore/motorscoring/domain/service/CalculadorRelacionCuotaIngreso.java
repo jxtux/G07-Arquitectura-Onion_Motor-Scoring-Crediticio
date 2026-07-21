@@ -6,9 +6,7 @@ import com.finanscore.motorscoring.domain.valueobject.RelacionCuotaIngreso;
 
 public final class CalculadorRelacionCuotaIngreso {
 
-	public RelacionCuotaIngreso calcular(
-			SolicitudCredito solicitud,
-			Solicitante solicitante) {
+	public RelacionCuotaIngreso calcular(SolicitudCredito solicitud, Solicitante solicitante) {
 
 		return RelacionCuotaIngreso.calcular(
 				solicitud.montoSolicitado().monto(),

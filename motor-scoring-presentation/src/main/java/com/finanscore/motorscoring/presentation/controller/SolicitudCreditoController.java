@@ -29,12 +29,15 @@ public class SolicitudCreditoController {
 	@Operation(summary = "RF04 - Registrar solicitud de crédito")
 	public ResponseEntity<SolicitudCreditoResponse> registrar(@Valid @RequestBody CrearSolicitudCreditoRequest r) {
 		var s = r.solicitante();
+		
 		var d = crear.ejecutar(new CrearSolicitudCreditoCommand(r.identificadorExterno(),
-				TipoDocumento.valueOf(s.tipoDocumento().toUpperCase()), s.numeroDocumento(), s.nombresRazonSocial(),
+				TipoDocumento.valueOf(s.tipoDocumento().toUpperCase()), 
+				s.numeroDocumento(), s.nombresRazonSocial(),
 				s.ingresosMensuales(), s.gastosMensuales(), s.obligacionesFinancieras(), s.antiguedadLaboralNegocio(),
 				s.numeroObligacionesActivas(), s.puntajeHistorialPagos(), s.alertasMora(), r.codigoProducto(),
-				r.montoSolicitado(), r.plazoSolicitado(), Moneda.valueOf(r.moneda().toUpperCase()),
-				r.finalidadCredito(), r.canalOrigen()));
+				r.montoSolicitado(), r.plazoSolicitado(), 
+				Moneda.valueOf(r.moneda().toUpperCase()), r.finalidadCredito(), r.canalOrigen()));
+		
 		var response = new SolicitudCreditoResponse(d.idSolicitud(), d.idSolicitante(), d.identificadorExterno(),
 				d.codigoProducto(), d.montoSolicitado(), d.plazoSolicitado(), d.moneda(), d.estado(),
 				d.fechaRegistro());

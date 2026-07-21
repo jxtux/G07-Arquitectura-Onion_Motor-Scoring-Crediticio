@@ -4,12 +4,14 @@ import com.finanscore.motorscoring.domain.exception.SolicitudNoEvaluableExceptio
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+
 public final class VersionModelo{
     private final Long id;
     private final String numeroVersion;
     private final LocalDate fechaInicioVigencia,fechaFinVigencia;
     private final EstadoVersionModelo estado;
     private final List<FactorScoring> factores;
+    
     public VersionModelo(Long id,String numero,LocalDate inicio,LocalDate fin,EstadoVersionModelo estado,List<FactorScoring> factores){
         this.id=Objects.requireNonNull(id);
         this.numeroVersion=Objects.requireNonNull(numero);
@@ -18,12 +20,16 @@ public final class VersionModelo{
         this.estado=Objects.requireNonNull(estado);
         this.factores=List.copyOf(factores);
     }
+    
     public boolean estaVigente(LocalDate f){
         return estado==EstadoVersionModelo.ACTIVA&&!f.isBefore(fechaInicioVigencia)&&(fechaFinVigencia==null||!f.isAfter(fechaFinVigencia));
     }
+    
     public void validarPesos(){
         BigDecimal total=factores.stream().filter(x->x.estado()==EstadoFactor.ACTIVO).map(x->x.peso().valor()).reduce(BigDecimal.ZERO,BigDecimal::add);
-        if(total.compareTo(new BigDecimal("100.0000"))!=0)throw new SolicitudNoEvaluableException("Los pesos deben sumar 100%. Total: "+total);
+       
+        if(total.compareTo(new BigDecimal("100.0000"))!=0)
+        	throw new SolicitudNoEvaluableException("Los pesos deben sumar 100%. Total: "+total);
     }
     public Long id(){
         return id;
