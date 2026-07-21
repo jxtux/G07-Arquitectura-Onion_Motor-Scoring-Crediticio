@@ -36,8 +36,9 @@ public class OnionBeanConfiguration {
 
 	@Bean
 	CalculadorScoring calculador(CalculadorCapacidadPago c, CalculadorRelacionDeudaIngreso r,
+		    CalculadorRelacionCuotaIngreso rci,
 			EvaluadorReglasExcluyentes e) {
-		return new CalculadorScoring(c, r, e);
+		return new CalculadorScoring(c, r,rci, e);
 	}
 
 	@Bean(name = "crearCore")

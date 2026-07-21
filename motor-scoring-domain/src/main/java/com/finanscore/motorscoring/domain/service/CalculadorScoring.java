@@ -12,11 +12,13 @@ import java.util.*;
 public final class CalculadorScoring {
 	private final CalculadorCapacidadPago capacidad;
 	private final CalculadorRelacionDeudaIngreso relacion;
+	private final CalculadorRelacionCuotaIngreso relacionCuotaIngreso;
 	private final EvaluadorReglasExcluyentes excluyentes;
 
-	public CalculadorScoring(CalculadorCapacidadPago c, CalculadorRelacionDeudaIngreso r, EvaluadorReglasExcluyentes e) {
+	public CalculadorScoring(CalculadorCapacidadPago c, CalculadorRelacionDeudaIngreso r,CalculadorRelacionCuotaIngreso rci, EvaluadorReglasExcluyentes e) {
 		capacidad = c;
 		relacion = r;
+		relacionCuotaIngreso = rci;
 		excluyentes = e;
 	}
 
@@ -30,6 +32,8 @@ public final class CalculadorScoring {
 		CapacidadPago cp = capacidad.calcular(solicitante);
 		
 		RelacionDeudaIngreso rdi = relacion.calcular(solicitante);
+
+		RelacionCuotaIngreso rci = relacionCuotaIngreso.calcular(solicitud,solicitante);
 		
 		List<ResultadoFactor> resultados = new ArrayList<>();
 		int total = 0;
@@ -38,7 +42,7 @@ public final class CalculadorScoring {
 			if (f.estado() != EstadoFactor.ACTIVO)
 				continue;
 			
-			BigDecimal valor = valorFactor(f.codigo(), solicitud, solicitante, cp, rdi);
+			BigDecimal valor = valorFactor(f.codigo(), solicitud, solicitante, cp, rdi,rci);
 			
 			ReglaEvaluacion regla = f.evaluar(valor);
 			
@@ -70,7 +74,8 @@ public final class CalculadorScoring {
 		return ResultadoScoring.RECHAZADA;
 	}
 
-	private BigDecimal valorFactor(String codigo, SolicitudCredito sol, Solicitante s, CapacidadPago cp, RelacionDeudaIngreso rdi) {
+	private BigDecimal valorFactor(String codigo, SolicitudCredito sol, Solicitante s, CapacidadPago cp, RelacionDeudaIngreso rdi,
+		RelacionCuotaIngreso rci) {
 		
 		return switch (codigo) {
 		
@@ -81,6 +86,7 @@ public final class CalculadorScoring {
 			case "OBLIGACIONES_ACTIVAS" -> BigDecimal.valueOf(s.numeroObligacionesActivas());
 			case "MONTO_CAPACIDAD" -> porcentaje(sol.montoSolicitado().monto(), cp.disponible().monto().multiply(BigDecimal.valueOf(sol.plazoSolicitado())));
 			case "ALERTAS_MORA" -> BigDecimal.valueOf(s.alertasMora());
+			case "RELACION_CUOTA_INGRESO" -> rci.porcentaje();
 			default -> throw new SolicitudNoEvaluableException("Factor no soportado: " + codigo);
 		};
 	}
