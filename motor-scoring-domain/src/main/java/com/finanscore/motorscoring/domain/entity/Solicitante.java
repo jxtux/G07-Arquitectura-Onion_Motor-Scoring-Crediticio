@@ -8,34 +8,44 @@ import java.util.Objects;
 
 public final class Solicitante {
 	private final Long id;
+	
 	private final NumeroDocumento documento;
+	
 	private final String nombresRazonSocial;
+	
 	private final Dinero ingresosMensuales, gastosMensuales, obligacionesFinancieras;
+	
 	private final int antiguedadLaboralNegocio, numeroObligacionesActivas, puntajeHistorialPagos, alertasMora;
+	
 	private final EstadoRegistro estado;
+	
 	private final LocalDateTime fechaRegistro;
 
-	private Solicitante(Long id, NumeroDocumento doc, String nombres, Dinero ingresos, Dinero gastos,
-			Dinero obligaciones, int antiguedad, int activas, int historial, int alertas, EstadoRegistro estado,
-			LocalDateTime fecha) {
+	private Solicitante(Long id, NumeroDocumento doc, String nombres, Dinero ingresos, Dinero gastos, Dinero obligaciones, int antiguedad, int activas, int historial, int alertas, EstadoRegistro estado,LocalDateTime fecha) {
 		
 		this.id = id;
 		this.documento = Objects.requireNonNull(doc);
 		
 		if (nombres == null || nombres.isBlank())
 			throw new DomainException("Los nombres o razón social son obligatorios.");
+		
 		this.nombresRazonSocial = nombres.trim();
 		this.ingresosMensuales = Objects.requireNonNull(ingresos);
 		this.gastosMensuales = Objects.requireNonNull(gastos);
 		this.obligacionesFinancieras = Objects.requireNonNull(obligaciones);
+		
 		if (ingresos.monto().signum() <= 0)
 			throw new DomainException("Los ingresos deben ser mayores que cero.");
+		
 		if (ingresos.moneda() != gastos.moneda() || ingresos.moneda() != obligaciones.moneda())
 			throw new DomainException("Los datos financieros deben usar la misma moneda.");
+		
 		if (antiguedad < 0 || activas < 0 || alertas < 0)
 			throw new DomainException("Los indicadores no pueden ser negativos.");
+		
 		if (historial < 0 || historial > 100)
 			throw new DomainException("El historial de pagos debe estar entre 0 y 100.");
+		
 		this.antiguedadLaboralNegocio = antiguedad;
 		this.numeroObligacionesActivas = activas;
 		this.puntajeHistorialPagos = historial;
@@ -44,13 +54,11 @@ public final class Solicitante {
 		this.fechaRegistro = Objects.requireNonNull(fecha);
 	}
 
-	public static Solicitante registrar(NumeroDocumento d, String n, Dinero i, Dinero g, Dinero o, int a, int ac, int h,
-			int am, LocalDateTime f) {
+	public static Solicitante registrar(NumeroDocumento d, String n, Dinero i, Dinero g, Dinero o, int a, int ac, int h, int am, LocalDateTime f) {
 		return new Solicitante(null, d, n, i, g, o, a, ac, h, am, EstadoRegistro.ACTIVO, f);
 	}
 
-	public static Solicitante reconstituir(Long id, NumeroDocumento d, String n, Dinero i, Dinero g, Dinero o, int a,
-			int ac, int h, int am, EstadoRegistro e, LocalDateTime f) {
+	public static Solicitante reconstituir(Long id, NumeroDocumento d, String n, Dinero i, Dinero g, Dinero o, int a, int ac, int h, int am, EstadoRegistro e, LocalDateTime f) {
 		return new Solicitante(id, d, n, i, g, o, a, ac, h, am, e, f);
 	}
 

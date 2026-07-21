@@ -18,6 +18,7 @@ class SolicitudCreditoTest {
 		SolicitudCredito solicitud = SolicitudCredito.registrar(1L, 1L, Dinero.positivo(new BigDecimal("10000"), Moneda.PEN), 12, "Consumo", "WEB", new IdentificadorExterno("EXT-100"), LocalDateTime.now());
 		assertEquals(EstadoSolicitud.REGISTRADA, solicitud.estado());
 		solicitud.marcarEvaluada();
+		
 		assertEquals(EstadoSolicitud.EVALUADA, solicitud.estado());
 		assertThrows(DomainException.class, solicitud::marcarEvaluada);
 	}

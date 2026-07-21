@@ -5,6 +5,7 @@ import com.finanscore.motorscoring.domain.valueobject.RelacionDeudaIngreso;
 
 
 public final class CalculadorRelacionDeudaIngreso {
+	
 	public RelacionDeudaIngreso calcular(Solicitante s) {
 		return RelacionDeudaIngreso.calcular(s.obligacionesFinancieras().monto(), s.ingresosMensuales().monto());
 	}

@@ -29,33 +29,28 @@ public final class CalculadorScoring {
 		
 		version.validarPesos();
 		
-		CapacidadPago cp = capacidad.calcular(solicitante);
-		
+		CapacidadPago cp = capacidad.calcular(solicitante);		
 		RelacionDeudaIngreso rdi = relacion.calcular(solicitante);
-
-		RelacionCuotaIngreso rci = relacionCuotaIngreso.calcular(solicitud,solicitante);
-		
+		RelacionCuotaIngreso rci = relacionCuotaIngreso.calcular(solicitud,solicitante);		
 		List<ResultadoFactor> resultados = new ArrayList<>();
 		int total = 0;
 		
 		for (FactorScoring f : version.factores()) {
+			
 			if (f.estado() != EstadoFactor.ACTIVO)
 				continue;
 			
-			BigDecimal valor = valorFactor(f.codigo(), solicitud, solicitante, cp, rdi,rci);
-			
-			ReglaEvaluacion regla = f.evaluar(valor);
-			
-			int aporte = regla.excluyente() ? 0: BigDecimal.valueOf(regla.puntaje()).multiply(f.peso().valor()).multiply(BigDecimal.TEN).divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP).intValueExact();
-			
+			BigDecimal valor = valorFactor(f.codigo(), solicitud, solicitante, cp, rdi,rci);			
+			ReglaEvaluacion regla = f.evaluar(valor);			
+			int aporte = regla.excluyente() ? 0: BigDecimal.valueOf(regla.puntaje()).multiply(f.peso().valor()).multiply(BigDecimal.TEN).divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP).intValueExact();			
 			total += aporte;
 			
 			resultados.add(new ResultadoFactor(f.id(), f.codigo(), valor, f.peso().valor(), regla.puntaje(), aporte, regla.codigo(), regla.descripcion(), regla.excluyente(), regla.resultadoExcluyente()));
 		}
 		
-		total = Math.max(0, Math.min(1000, total));
-		
+		total = Math.max(0, Math.min(1000, total));		
 		final int score = total;
+		
 		ResultadoScoring resultado = excluyentes.evaluar(resultados).orElseGet(() -> clasificar(score));
 		
 		EstadoEvaluacion estado = resultados.stream().anyMatch(ResultadoFactor::reglaExcluyente)? EstadoEvaluacion.CON_REGLA_EXCLUYENTE: EstadoEvaluacion.COMPLETADA;
