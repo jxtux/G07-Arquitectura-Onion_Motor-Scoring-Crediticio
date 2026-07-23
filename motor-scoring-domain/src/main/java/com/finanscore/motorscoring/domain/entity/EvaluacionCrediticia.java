@@ -7,6 +7,13 @@ import java.util.*;
 
 public final class EvaluacionCrediticia {
 
+	//Contiene los objetos principales del negocio que tienen:
+	//Identidad.
+	//Estado.
+	//Ciclo de vida.
+	//Comportamiento de negocio.
+	//Relaciones con otros objetos del dominio.
+			
 	private final Long id, idSolicitud, idVersionModelo;
 	
 	private final LocalDateTime fechaEvaluacion;

@@ -5,7 +5,9 @@ import java.util.Optional;
 
 
 public interface ProductoCrediticioRepository {
+	
 	Optional<ProductoCrediticio> buscarPorId(Long id);
 
 	Optional<ProductoCrediticio> buscarPorCodigo(String codigo);
+	
 }

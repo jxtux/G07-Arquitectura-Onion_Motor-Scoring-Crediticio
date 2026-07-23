@@ -6,9 +6,11 @@ import java.util.Optional;
 
 
 public interface SolicitanteRepository {
+	
 	Optional<Solicitante> buscarPorId(Long id);
 
 	Optional<Solicitante> buscarPorDocumento(NumeroDocumento documento);
 
 	Solicitante guardar(Solicitante solicitante);
+	
 }

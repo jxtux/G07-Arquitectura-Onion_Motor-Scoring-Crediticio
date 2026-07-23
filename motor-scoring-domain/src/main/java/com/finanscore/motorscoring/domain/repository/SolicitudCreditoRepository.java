@@ -6,6 +6,7 @@ import java.util.Optional;
 
 
 public interface SolicitudCreditoRepository {
+	
 	boolean existePorIdentificadorExterno(IdentificadorExterno identificador);
 
 	Optional<SolicitudCredito> buscarPorId(Long id);

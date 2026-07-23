@@ -10,9 +10,13 @@ import java.util.*;
 
 
 public final class CalculadorScoring {
+	
 	private final CalculadorCapacidadPago capacidad;
+	
 	private final CalculadorRelacionDeudaIngreso relacion;
+	
 	private final CalculadorRelacionCuotaIngreso relacionCuotaIngreso;
+	
 	private final EvaluadorReglasExcluyentes excluyentes;
 
 	public CalculadorScoring(CalculadorCapacidadPago c, CalculadorRelacionDeudaIngreso r,CalculadorRelacionCuotaIngreso rci, EvaluadorReglasExcluyentes e) {
@@ -51,10 +55,8 @@ public final class CalculadorScoring {
 		total = Math.max(0, Math.min(1000, total));		
 		final int score = total;
 		
-		ResultadoScoring resultado = excluyentes.evaluar(resultados).orElseGet(() -> clasificar(score));
-		
-		EstadoEvaluacion estado = resultados.stream().anyMatch(ResultadoFactor::reglaExcluyente)? EstadoEvaluacion.CON_REGLA_EXCLUYENTE: EstadoEvaluacion.COMPLETADA;
-		
+		ResultadoScoring resultado = excluyentes.evaluar(resultados).orElseGet(() -> clasificar(score));		
+		EstadoEvaluacion estado = resultados.stream().anyMatch(ResultadoFactor::reglaExcluyente)? EstadoEvaluacion.CON_REGLA_EXCLUYENTE: EstadoEvaluacion.COMPLETADA;		
 		return new EvaluacionCrediticia(null, solicitud.id(), version.id(), fecha, new PuntajeCrediticio(total), resultado, estado, resultados);
 	}
 

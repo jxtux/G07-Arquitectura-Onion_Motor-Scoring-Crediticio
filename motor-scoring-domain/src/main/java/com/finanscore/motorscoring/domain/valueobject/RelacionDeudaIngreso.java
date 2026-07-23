@@ -5,6 +5,7 @@ import java.math.*;
 
 
 public record RelacionDeudaIngreso(BigDecimal porcentaje) {
+	
 	public RelacionDeudaIngreso {
 
 		if (porcentaje == null || porcentaje.signum() < 0)

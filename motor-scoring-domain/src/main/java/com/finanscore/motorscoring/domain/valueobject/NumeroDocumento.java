@@ -15,6 +15,7 @@ public record NumeroDocumento(TipoDocumento tipo, String numero) {
 		}
 		
 		numero = numero.trim().toUpperCase();
+		
 		boolean formatoValido = switch (tipo) {case DNI -> numero.matches("\\d{8}");
 											   case RUC -> numero.matches("\\d{11}");
 											   case CE -> numero.matches("[A-Z0-9]{9,12}");

@@ -7,6 +7,7 @@ import java.math.*;
 public record Porcentaje(BigDecimal valor) {
 	
 	public Porcentaje {
+		
 		if (valor == null)
 			throw new DomainException("El porcentaje es obligatorio.");
 		
